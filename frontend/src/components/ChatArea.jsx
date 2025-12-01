@@ -146,8 +146,24 @@ function ChatArea({ selectedUser, currentUser, socket }) {
       }
     } catch (err) {
       console.error('Error sending message:', err);
-      const errorMsg = err.response?.data?.message || err.message || 'Failed to send message';
-      alert(`Error: ${errorMsg}. Please try again.`);
+      console.error('Error response:', err.response?.data);
+      
+      let errorMsg = 'Failed to send message';
+      
+      if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      
+      // Show user-friendly error message
+      if (errorMsg.includes('not configured') || errorMsg.includes('not available')) {
+        alert('File upload service is not configured. Please contact support or try sending a text message.');
+      } else if (errorMsg.includes('upload failed') || errorMsg.includes('upload')) {
+        alert(`File upload failed: ${errorMsg}. Please check your file and try again.`);
+      } else {
+        alert(`Error: ${errorMsg}. Please try again.`);
+      }
     }
   };
 

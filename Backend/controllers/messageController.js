@@ -73,10 +73,26 @@ exports.sendMessage = async (req, res) => {
     res.status(201).json(result.message);
   } catch (error) {
     console.error("sendMessage error:", error);
-    const statusCode = error.message?.includes("Cloudinary") ? 502 : 500;
+    console.error("Error stack:", error.stack);
+    
+    // Determine appropriate status code
+    let statusCode = 500;
+    let errorMessage = "Server error";
+    
+    if (error.message?.includes("not configured") || error.message?.includes("Cloudinary")) {
+      statusCode = 503; // Service Unavailable
+      errorMessage = "File upload service is not available. Please contact support.";
+    } else if (error.message?.includes("upload failed") || error.message?.includes("upload")) {
+      statusCode = 502; // Bad Gateway
+      errorMessage = error.message || "File upload failed. Please try again.";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
     res.status(statusCode).json({ 
-      message: error.message || "Server error",
-      details: process.env.NODE_ENV === "development" ? error.stack : undefined
+      message: errorMessage,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined
     });
   }
 };
