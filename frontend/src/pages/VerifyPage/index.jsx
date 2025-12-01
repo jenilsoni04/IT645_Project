@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Box, Button, TextField, Typography, Container, Paper } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -32,41 +31,30 @@ export default function VerifyEmailPage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f0f4f8",
-        p: 2,
-      }}
-    >
-      <Container maxWidth="sm">
-        <Paper sx={{ p: 4 }}>
-          <Typography variant="h5" align="center" gutterBottom>
+    <div className="min-h-screen flex justify-center items-center bg-[#f0f4f8] p-2">
+      <div className="w-full max-w-md">
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <h2 className="text-2xl font-semibold text-center mb-2 text-gray-800">
             Verify Your Email
-          </Typography>
-          <Typography variant="body2" align="center" sx={{ mb: 3 }}>
+          </h2>
+          <p className="text-sm text-center text-gray-600 mb-6">
             Enter the verification code sent to your email.
-          </Typography>
-          <TextField
-            label="Verification Code"
+          </p>
+          <input
+            type="text"
+            placeholder="Verification Code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            fullWidth
-            margin="normal"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
           />
-          <Button
-            variant="contained"
-            fullWidth
-            sx={{ mt: 3 }}
+          <button
             onClick={handleVerify}
+            className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200"
           >
             Confirm
-          </Button>
-        </Paper>
-      </Container>
-    </Box>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
