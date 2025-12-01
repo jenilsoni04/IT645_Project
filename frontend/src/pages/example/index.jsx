@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Box, Container, Paper, Typography, CircularProgress } from "@mui/material";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -38,39 +37,32 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center mt-40">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   if (!user) return null;
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f0f4f8",
-        p: 2,
-      }}
-    >
-      <Container maxWidth="sm">
-        <Paper sx={{ p: 4, borderRadius: 3 }}>
-          <Typography variant="h5" gutterBottom>
+    <div className="min-h-screen flex justify-center items-center bg-[#f0f4f8] p-2">
+      <div className="w-full max-w-md">
+        <div className="bg-white p-8 rounded-xl shadow-md">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-800">
             My Profile
-          </Typography>
+          </h2>
 
-          <Typography variant="body1"><strong>Name:</strong> {user.name}</Typography>
-          <Typography variant="body1"><strong>Email:</strong> {user.email}</Typography>
-          <Typography variant="body1"><strong>Skills Have:</strong> {user.skillsHave.join(", ")}</Typography>
-          <Typography variant="body1"><strong>Skills Want:</strong> {user.skillsWant.join(", ")}</Typography>
-          <Typography variant="body1"><strong>Free Connections Left:</strong> {user.freeConnectionLeft}</Typography>
-          <Typography variant="body1"><strong>Verified:</strong> {user.isVerified ? "Yes" : "No"}</Typography>
-        </Paper>
-      </Container>
-    </Box>
+          <div className="space-y-3">
+            <p className="text-base"><strong className="text-gray-700">Name:</strong> <span className="text-gray-600">{user.name}</span></p>
+            <p className="text-base"><strong className="text-gray-700">Email:</strong> <span className="text-gray-600">{user.email}</span></p>
+            <p className="text-base"><strong className="text-gray-700">Skills Have:</strong> <span className="text-gray-600">{user.skillsHave.join(", ")}</span></p>
+            <p className="text-base"><strong className="text-gray-700">Skills Want:</strong> <span className="text-gray-600">{user.skillsWant.join(", ")}</span></p>
+            <p className="text-base"><strong className="text-gray-700">Free Connections Left:</strong> <span className="text-gray-600">{user.freeConnectionLeft}</span></p>
+            <p className="text-base"><strong className="text-gray-700">Verified:</strong> <span className="text-gray-600">{user.isVerified ? "Yes" : "No"}</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
