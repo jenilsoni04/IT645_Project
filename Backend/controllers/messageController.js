@@ -96,3 +96,39 @@ exports.sendMessage = async (req, res) => {
     });
   }
 };
+
+exports.downloadFile = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const currentUserId =
+      (req.user && (req.user._id || req.user.id)) || req.userId;
+
+    if (!currentUserId) {
+      return res
+        .status(401)
+        .json({ message: "User not authenticated for download" });
+    }
+
+    if (!messageId) {
+      return res.status(400).json({ message: "Message ID is required" });
+    }
+
+    const fileData = await messageService.downloadFileByMessageId(messageId);
+
+    res.setHeader('Content-Type', fileData.contentType);
+    res.setHeader('Content-Length', fileData.buffer.length);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${fileData.fileName}"`
+    );
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
+    res.send(fileData.buffer);
+    console.log('File download initiated:', { messageId, fileName: fileData.fileName });
+  } catch (error) {
+    console.error('downloadFile error:', error);
+    res.status(500).json({ message: error.message || "Download failed" });
+  }
+};

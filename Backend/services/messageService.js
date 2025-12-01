@@ -3,6 +3,7 @@ const cloudinary = require("../config/cloudinary");
 const streamifier = require("streamifier");
 const fs = require("fs");
 const path = require("path");
+const axios = require('axios');
 
 // Local file storage fallback
 const uploadToLocalStorage = (buffer, filename) => {
@@ -91,7 +92,23 @@ const uploadBufferToCloudinary = (buffer, filename) => {
             return reject(new Error('File upload failed: Invalid response from upload service'));
           }
           console.log('File uploaded successfully:', result.secure_url);
-          resolve(result);
+
+          // Verify uploaded file headers (helps debug corrupted uploads / wrong content-type)
+          axios.head(result.secure_url, { timeout: 5000 })
+            .then((resp) => {
+              console.log('Uploaded file headers:', {
+                url: result.secure_url,
+                status: resp.status,
+                contentType: resp.headers['content-type'],
+                contentLength: resp.headers['content-length'],
+              });
+              resolve(result);
+            })
+            .catch((headErr) => {
+              console.warn('Could not fetch uploaded file headers:', headErr.message);
+              // Still resolve so upload flow continues; header fetch is only for diagnostics
+              resolve(result);
+            });
         }
       );
 
@@ -171,4 +188,55 @@ exports.createMessage = async (
     senderId,
     receiverId,
   };
+};
+
+exports.downloadFileByMessageId = async (messageId) => {
+  try {
+    const message = await Message.findById(messageId);
+    if (!message || !message.fileUrl) {
+      throw new Error('Message or file not found');
+    }
+
+    // Fetch the file from Cloudinary
+    const response = await axios.get(message.fileUrl, {
+      responseType: 'arraybuffer',
+      timeout: 30000,
+    });
+
+    const fileBuffer = response.data;
+    const fileName = message.fileName || 'download';
+    const isPDF = fileName.toLowerCase().endsWith('.pdf');
+    
+    // Determine content type
+    let contentType = 'application/octet-stream';
+    if (isPDF) {
+      contentType = 'application/pdf';
+    } else if (/\.(jpg|jpeg)$/i.test(fileName)) {
+      contentType = 'image/jpeg';
+    } else if (/\.png$/i.test(fileName)) {
+      contentType = 'image/png';
+    } else if (/\.gif$/i.test(fileName)) {
+      contentType = 'image/gif';
+    } else if (/\.(doc|docx)$/i.test(fileName)) {
+      contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    } else if (/\.txt$/i.test(fileName)) {
+      contentType = 'text/plain';
+    }
+
+    console.log('Fetched file from Cloudinary:', {
+      messageId,
+      fileName,
+      contentType,
+      size: fileBuffer.length,
+    });
+
+    return {
+      buffer: fileBuffer,
+      fileName,
+      contentType,
+    };
+  } catch (error) {
+    console.error('Error downloading file:', error.message);
+    throw new Error(`Failed to download file: ${error.message}`);
+  }
 };

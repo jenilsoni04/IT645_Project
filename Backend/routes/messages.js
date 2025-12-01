@@ -7,5 +7,6 @@ const router = express.Router();
 
 router.get("/:userId", auth, messageController.getMessages);
 router.post("/", auth, upload.single("file"), messageController.sendMessage);
+router.get("/download/:messageId", auth, messageController.downloadFile);
 
 module.exports = router;
