@@ -30,11 +30,22 @@ function initializeSocket(io) {
   });
 
   io.on('connection', (socket) => {
+    console.log('Socket connected:', socket.id, 'userId:', socket.userId);
+    
+    // Auto-join if userId is already set from auth middleware
+    if (socket.userId) {
+      const id = String(socket.userId);
+      onlineUsers.set(id, socket.id);
+      socket.join(`user:${id}`);
+      console.log('Auto-joined user room:', id);
+    }
+
     socket.on('join', (userId) => {
       const id = String(userId || socket.userId);
       onlineUsers.set(id, socket.id);
       socket.userId = id;
       socket.join(`user:${id}`);
+      console.log('User joined room:', id);
     });
 
     socket.on('sendMessage', async ({ savedMessage }) => {

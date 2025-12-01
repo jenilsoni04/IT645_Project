@@ -1,18 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { format, isToday, isYesterday } from 'date-fns';
-import {
-  Box,
-  Typography,
-  Avatar,
-  Divider,
-  Chip,
-  CircularProgress,
-  IconButton,
-  TextField,
-} from '@mui/material';
+import { Paperclip, Send } from 'lucide-react';
 import api from '../utils/api';
 import MessageBubble from './MessageBubble';
-import { SendIcon, AttachFileIcon } from './Icons';
 
 function ChatArea({ selectedUser, currentUser, socket }) {
   const [messages, setMessages] = useState([]);
@@ -84,7 +74,7 @@ function ChatArea({ selectedUser, currentUser, socket }) {
 
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
@@ -95,14 +85,27 @@ function ChatArea({ selectedUser, currentUser, socket }) {
     const file = fileInputRef.current?.files[0];
     if (!inputMessage.trim() && !file) return;
 
+    // Check if socket is connected
+    if (!socket || !socket.connected) {
+      console.error('Socket not connected. Cannot send message.');
+      alert('Connection lost. Please refresh the page.');
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append('receiverId', selectedUser._id);
 
       if (file) {
+        // Validate file before sending
+        if (file.size > 10 * 1024 * 1024) {
+          alert('File size exceeds 10MB limit');
+          return;
+        }
+        
         formData.append('file', file);
         formData.append('type', 'file');
-        if (inputMessage.trim()) {
+        if (inputMessage.trim() && !inputMessage.includes(file.name)) {
           formData.append('content', inputMessage.trim());
         }
       } else {
@@ -111,10 +114,25 @@ function ChatArea({ selectedUser, currentUser, socket }) {
       }
 
       const res = await api.post('/messages', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (file) {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            console.log(`Upload progress: ${percentCompleted}%`);
+          }
+        },
       });
 
       const savedMessage = res.data;
+
+      // Emit to socket for real-time delivery
+      if (socket && socket.connected) {
+        socket.emit('sendMessage', { savedMessage });
+      }
 
       setMessages((prev) =>
         prev.some((m) => m._id === savedMessage._id)
@@ -128,6 +146,8 @@ function ChatArea({ selectedUser, currentUser, socket }) {
       }
     } catch (err) {
       console.error('Error sending message:', err);
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to send message';
+      alert(`Error: ${errorMsg}. Please try again.`);
     }
   };
 
@@ -151,181 +171,117 @@ function ChatArea({ selectedUser, currentUser, socket }) {
 
   if (!selectedUser) {
     return (
-      <Box
-        sx={{
-          flex: 1,
-          bgcolor: '#f5f5f5',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Typography>Select a user to start chatting</Typography>
-      </Box>
+      <div className="flex-1 bg-gray-100 flex items-center justify-center">
+        <p>Select a user to start chatting</p>
+      </div>
     );
   }
 
   return (
-    <Box
-      sx={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        bgcolor: '#e3f2fd',
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          px: 2,
-          py: 1,
-          bgcolor: '#ffffff',
-          borderBottom: '1px solid #e0e0e0',
-        }}
-      >
-        <Avatar
-          sx={{ bgcolor: '#1565c0', color: '#ffffff', fontWeight: 600 }}
-        >
+    <div className="flex-1 flex flex-col h-full bg-blue-50">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-2 bg-white border-b border-gray-200">
+        <div className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center font-semibold">
           {selectedUser.name?.charAt(0).toUpperCase()}
-        </Avatar>
-        <Typography variant="subtitle1" fontWeight={600}>
+        </div>
+        <h3 className="text-base font-semibold text-gray-900">
           {selectedUser.name}
-        </Typography>
-      </Box>
+        </h3>
+      </div>
 
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: 'auto',
-          px: 1,
-          py: 1,
-        }}
-      >
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto px-2 py-2">
         {loading ? (
-          <Box
-            height="100%"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <CircularProgress size={24} />
-          </Box>
+          <div className="h-full flex items-center justify-center">
+            <div className="w-6 h-6 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
         ) : sorted.length === 0 ? (
-          <Box
-            height="100%"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Typography variant="body2" color="text.secondary">
-              No messages yet. Say hi
-            </Typography>
-          </Box>
+          <div className="h-full flex items-center justify-center">
+            <p className="text-sm text-gray-500">No messages yet. Say hi</p>
+          </div>
         ) : (
           <>
             {Object.entries(groupedMessages).map(([dateKey, msgs]) => (
-              <Box key={dateKey}>
-                <Divider sx={{ my: 1.5 }}>
-                  <Chip
-                    label={formatDateHeader(dateKey)}
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      borderColor: '#1565c0',
-                      color: '#1565c0',
-                      backgroundColor: '#ffffff',
-                    }}
-                  />
-                </Divider>
+              <div key={dateKey} className="my-4">
+                <div className="relative flex items-center my-3">
+                  <div className="flex-grow border-t border-gray-300"></div>
+                  <span className="px-3 py-1 text-xs font-medium text-blue-700 bg-white border border-blue-700 rounded-full">
+                    {formatDateHeader(dateKey)}
+                  </span>
+                  <div className="flex-grow border-t border-gray-300"></div>
+                </div>
 
                 {msgs.map((message) => {
                   const senderId = getId(message.sender);
                   const isOwnMessage = senderId === currentUser._id;
 
                   return (
-                    <Box key={message._id + '-wrapper'}>
+                    <div key={message._id + '-wrapper'}>
                       <MessageBubble
                         message={message}
                         isOwnMessage={isOwnMessage}
                       />
-                    </Box>
+                    </div>
                   );
                 })}
-              </Box>
+              </div>
             ))}
             <div ref={messagesEndRef} />
           </>
         )}
-      </Box>
+      </div>
 
-      <Box
-        component="form"
+      {/* Input Area */}
+      <form
         onSubmit={handleSendMessage}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          px: 1.5,
-          py: 1,
-          bgcolor: '#ffffff',
-          borderTop: '1px solid #e0e0e0',
-        }}
+        className="flex items-center gap-2 px-3 py-2 bg-white border-t border-gray-200"
       >
         <input
           ref={fileInputRef}
           type="file"
-          style={{ display: 'none' }}
+          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+          className="hidden"
           onChange={(e) => {
-            if (e.target.files[0] && !inputMessage) {
-              setInputMessage(e.target.files[0].name);
+            if (e.target.files[0]) {
+              const fileName = e.target.files[0].name;
+              if (!inputMessage) {
+                setInputMessage(fileName);
+              }
+              // Validate file size (10MB limit)
+              if (e.target.files[0].size > 10 * 1024 * 1024) {
+                alert('File size exceeds 10MB limit');
+                e.target.value = '';
+                setInputMessage('');
+                return;
+              }
             }
           }}
         />
-        <IconButton
+        <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          size="small"
+          className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
         >
-          <AttachFileIcon fontSize="small" />
-        </IconButton>
+          <Paperclip className="w-5 h-5" />
+        </button>
 
-        <TextField
-          size="small"
-          fullWidth
-          variant="outlined"
+        <input
+          type="text"
           placeholder="Type a message"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: '#e0e0e0',
-              },
-              '&:hover fieldset': {
-                borderColor: '#e0e0e0',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: '#e0e0e0',
-              },
-            },
-          }}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
 
-
-        <IconButton
+        <button
           type="submit"
-          sx={{ color: '#1565c0' }}
-          disabled={
-            !inputMessage.trim() && !fileInputRef.current?.files[0]
-          }
+          disabled={!inputMessage.trim() && !fileInputRef.current?.files[0]}
+          className="p-2 text-blue-700 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          <SendIcon />
-        </IconButton>
-      </Box>
-    </Box>
+          <Send className="w-5 h-5" />
+        </button>
+      </form>
+    </div>
   );
 }
 

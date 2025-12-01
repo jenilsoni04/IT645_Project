@@ -17,9 +17,12 @@ exports.createOrderService = async (planName) => {
     amount: plan.price * 100,
     currency: "INR",
     receipt: `receipt_${shortId}`,
+    payment_capture: 1, // Auto capture payment
   };
 
+  console.log("Creating Razorpay order with options:", options);
   const order = await razorpay.orders.create(options);
+  console.log("Razorpay order created:", order.id);
 
   return {
     orderId: order.id,
@@ -45,7 +48,16 @@ exports.verifyPaymentService = async ({
     .update(orderId + "|" + paymentId)
     .digest("hex");
 
-  if (generatedSignature !== signature) throw new Error("Invalid signature");
+  console.log("Signature verification:", {
+    received: signature,
+    generated: generatedSignature,
+    match: generatedSignature === signature,
+  });
+
+  if (generatedSignature !== signature) {
+    console.error("Signature mismatch!");
+    throw new Error("Invalid signature");
+  }
 
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + plan.durationDays);

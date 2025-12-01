@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
-import { Box, Typography } from '@mui/material';
 import UserList from '../../components/UserList';
 import ChatArea from '../../components/ChatArea';
 import api from '../../utils/api';
@@ -14,26 +13,64 @@ function Chat({ user, setUser }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No token found for socket connection');
+      return;
+    }
+
     const newSocket = io('http://localhost:3000', {
       auth: { token },
-      transports: ['websocket'],
+      query: { token }, // Also send in query for compatibility
+      transports: ['websocket', 'polling'], // Allow fallback to polling for Chrome
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+      timeout: 20000,
     });
 
     newSocket.on('connect', () => {
-      console.log('Socket connected');
+      console.log('Socket connected:', newSocket.id);
+      // Join with user ID after connection
+      const userId = user?._id || JSON.parse(localStorage.getItem('user') || '{}')?._id;
+      if (userId) {
+        console.log('Joining socket with userId:', userId);
+        newSocket.emit('join', userId);
+      }
     });
 
-    newSocket.on('disconnect', () => {
-      console.log('Socket disconnected');
+    newSocket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      if (error.message.includes('Authentication')) {
+        console.error('Socket authentication failed. Please log in again.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+        window.location.href = '/login';
+      }
+    });
+
+    newSocket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+      if (reason === 'io server disconnect') {
+        // Server disconnected, reconnect manually
+        newSocket.connect();
+      }
+    });
+
+    newSocket.on('error', (error) => {
+      console.error('Socket error:', error);
     });
 
     setSocket(newSocket);
     fetchUsers();
 
     return () => {
+      if (newSocket.connected) {
+        newSocket.disconnect();
+      }
       newSocket.close();
     };
-  }, []);
+  }, [user?._id]);
 
   const fetchUsers = async () => {
     try {
@@ -89,17 +126,7 @@ function Chat({ user, setUser }) {
   };
 
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        top: '64px',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        display: 'flex',
-        bgcolor: '#ffffff',
-      }}
-    >
+    <div className="fixed top-16 left-0 right-0 bottom-0 flex bg-white">
       <UserList
         users={users}
         selectedUser={selectedUser}
@@ -115,24 +142,13 @@ function Chat({ user, setUser }) {
           socket={socket}
         />
       ) : (
-        <Box
-          sx={{
-            flex: 1,
-            bgcolor: '#f5f5f5',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Typography
-            variant="h6"
-            sx={{ color: '#1565c0', fontWeight: 500 }}
-          >
+        <div className="flex-1 bg-gray-100 flex items-center justify-center">
+          <h6 className="text-blue-700 font-medium text-lg">
             Select a user to start chatting
-          </Typography>
-        </Box>
+          </h6>
+        </div>
       )}
-    </Box>
+    </div>
   );
 }
 

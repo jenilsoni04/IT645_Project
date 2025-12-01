@@ -1,145 +1,64 @@
 import React from 'react';
-import {
-  Box,
-  List,
-  ListItemButton,
-  ListItemAvatar,
-  Avatar,
-  Typography,
-  Divider,
-} from '@mui/material';
 
 function UserList({ users, selectedUser, onSelectUser, loading, error }) {
   return (
-    <Box
-      sx={{
-        width: 300,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        bgcolor: '#f5f5f5',
-        borderRight: '1px solid #e0e0e0',
-        flexShrink: 0,
-      }}
-    >
-      <Box
-        sx={{
-          px: 2,
-          py: 1.5,
-          bgcolor: '#1565c0',
-          color: '#ffffff',
-        }}
-      >
-        <Typography variant="subtitle1" fontWeight={600}>
-          Chat
-        </Typography>
-      </Box>
+    <div className="w-[300px] h-full flex flex-col bg-gray-100 border-r border-gray-200 flex-shrink-0">
+      {/* Header */}
+      <div className="px-4 py-3 bg-blue-700 text-white">
+        <h3 className="text-base font-semibold">Chat</h3>
+      </div>
 
+      {/* Content */}
       {loading ? (
-        <Box
-          flex={1}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Typography variant="body2" sx={{ color: '#1565c0' }}>
-            Loading users...
-          </Typography>
-        </Box>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-blue-700">Loading users...</p>
+        </div>
       ) : error ? (
-        <Box
-          flex={1}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Typography variant="body2" color="error">
-            {error}
-          </Typography>
-        </Box>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
       ) : !users || users.length === 0 ? (
-        <Box
-          flex={1}
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          px={2}
-        >
-          <Typography variant="body2" color="text.secondary">
-            No users available
-          </Typography>
-          <Typography variant="caption" color="text.disabled" mt={0.5}>
+        <div className="flex-1 flex flex-col items-center justify-center px-4">
+          <p className="text-sm text-gray-600">No users available</p>
+          <p className="text-xs text-gray-400 mt-1">
             Register another user to start chatting
-          </Typography>
-        </Box>
+          </p>
+        </div>
       ) : (
-        <List
-          sx={{
-            width: '100%',
-            flex: 1,
-            overflow: 'auto',
-            py: 0,
-          }}
-        >
+        <div className="flex-1 overflow-auto py-0">
           {users.map((user, index) => {
             const isSelected = selectedUser?._id === user._id;
 
             return (
               <React.Fragment key={user._id}>
-                <ListItemButton
+                <button
                   onClick={() => onSelectUser(user)}
-                  selected={isSelected}
-                  sx={{
-                    alignItems: 'center',
-                    bgcolor: isSelected ? '#ffffff' : '#f5f5f5',
-                    '&.Mui-selected:hover': {
-                      bgcolor: '#e3f2fd',
-                    },
-                    '&:hover': {
-                      bgcolor: '#e3f2fd',
-                    },
-                    py: 1.2,
-                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
+                    isSelected
+                      ? "bg-white hover:bg-blue-50"
+                      : "bg-gray-100 hover:bg-blue-50"
+                  }`}
                 >
-                  <ListItemAvatar>
-                    <Avatar
-                      sx={{
-                        bgcolor: '#1565c0',
-                        color: '#ffffff',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {user.name?.charAt(0).toUpperCase()}
-                    </Avatar>
-                  </ListItemAvatar>
+                  <div className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center font-semibold flex-shrink-0">
+                    {user.name?.charAt(0).toUpperCase()}
+                  </div>
 
-                  <Box
-                    flex={1}
-                    minWidth={0}
-                    display="flex"
-                    flexDirection="column"
-                  >
-                    <Typography
-                      variant="subtitle2"
-                      noWrap
-                      sx={{
-                        fontWeight: 500,
-                        color: '#212121',
-                      }}
-                    >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
                       {user.name}
-                    </Typography>
-                  </Box>
-                </ListItemButton>
+                    </p>
+                  </div>
+                </button>
 
-                {index < users.length - 1 && <Divider component="li" />}
+                {index < users.length - 1 && (
+                  <div className="border-t border-gray-200"></div>
+                )}
               </React.Fragment>
             );
           })}
-        </List>
+        </div>
       )}
-    </Box>
+    </div>
   );
 }
 

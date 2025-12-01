@@ -45,6 +45,18 @@ exports.sendMessage = async (req, res) => {
         .json({ message: "User not authenticated for sending message" });
     }
 
+    if (!receiverId) {
+      return res.status(400).json({ message: "Receiver ID is required" });
+    }
+
+    // Validate file if present
+    if (fileData) {
+      if (fileData.size > 10 * 1024 * 1024) {
+        return res.status(400).json({ message: "File size exceeds 10MB limit" });
+      }
+      console.log("Uploading file:", fileData.originalname, "Size:", fileData.size, "Type:", fileData.mimetype);
+    }
+
     const result = await messageService.createMessage(
       senderId,
       receiverId,
@@ -61,6 +73,10 @@ exports.sendMessage = async (req, res) => {
     res.status(201).json(result.message);
   } catch (error) {
     console.error("sendMessage error:", error);
-    res.status(500).json({ message: error.message || "Server error" });
+    const statusCode = error.message?.includes("Cloudinary") ? 502 : 500;
+    res.status(statusCode).json({ 
+      message: error.message || "Server error",
+      details: process.env.NODE_ENV === "development" ? error.stack : undefined
+    });
   }
 };

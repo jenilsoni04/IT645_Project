@@ -106,6 +106,8 @@ const Subscription = () => {
 
       // 1️⃣ Create Order
       const token = localStorage.getItem("token");
+      console.log("Creating order for plan:", planName);
+      
       const { data: orderData } = await axios.post(
         `${API_BASE_URL}/create-order`,
         {
@@ -117,7 +119,10 @@ const Subscription = () => {
         }
       );
 
+      console.log("Order created:", orderData);
+
       if (!orderData || !orderData.orderId || !orderData.amount) {
+        console.error("Invalid order data:", orderData);
         throw new Error("Invalid order data received from server");
       }
 
@@ -133,10 +138,30 @@ const Subscription = () => {
           email: currentUser.email || "",
           contact: currentUser.phone || "",
         },
+        theme: {
+          color: "#30187d",
+        },
+        notes: {
+          plan: planName,
+          userId: currentUser._id,
+        },
         handler: async (response) => {
+          console.log("Payment successful, response:", response);
           try {
             // 2️⃣ Verify Payment
             const token = localStorage.getItem("token");
+            
+            if (!response.razorpay_payment_id || !response.razorpay_order_id || !response.razorpay_signature) {
+              throw new Error("Invalid payment response from Razorpay");
+            }
+
+            console.log("Verifying payment with:", {
+              userId: currentUser._id,
+              planName,
+              orderId: response.razorpay_order_id,
+              paymentId: response.razorpay_payment_id,
+            });
+
             const verifyRes = await axios.post(
               `${API_BASE_URL}/verify-payment`,
               {
@@ -151,6 +176,7 @@ const Subscription = () => {
               }
             );
 
+            console.log("Payment verified successfully:", verifyRes.data);
             toast.success("Subscription activated successfully!");
 
             // Refresh subscription status
@@ -177,8 +203,14 @@ const Subscription = () => {
             }
           } catch (err) {
             console.error("Payment verification error:", err);
+            console.error("Error details:", {
+              message: err.message,
+              response: err.response?.data,
+              status: err.response?.status,
+            });
             toast.error(
               err.response?.data?.message ||
+                err.message ||
                 "Payment verification failed. Please contact support."
             );
           } finally {
@@ -191,22 +223,63 @@ const Subscription = () => {
             toast.info("Payment cancelled");
           },
         },
-        theme: {
-          color: "#30187d",
-        },
-        notes: {
-          plan: planName,
-          userId: currentUser._id,
-        },
       };
 
       const razorpay = new window.Razorpay(options);
+      
+      // Handle payment failure
       razorpay.on("payment.failed", function (response) {
-        console.error("Payment failed:", response.error);
-        toast.error(
-          `Payment failed: ${response.error.description || "Unknown error"}`
-        );
+        console.error("Payment failed - Full response:", JSON.stringify(response, null, 2));
+        console.error("Error object:", response.error);
+        console.error("Error details:", {
+          description: response.error?.description,
+          reason: response.error?.reason,
+          code: response.error?.code,
+          source: response.error?.source,
+          step: response.error?.step,
+          metadata: response.error?.metadata,
+        });
+        
+        const errorDesc = response.error?.description || 
+                         response.error?.reason || 
+                         response.error?.code || 
+                         response.error?.source || 
+                         response.error?.step || 
+                         "Unknown error";
+        
+        // Handle specific international card error
+        if (errorDesc.toLowerCase().includes("international") || 
+            errorDesc.toLowerCase().includes("not supported")) {
+          toast.error(
+            "International cards are not supported. Please use an Indian card or contact support for alternative payment methods."
+          );
+        } else if (errorDesc.toLowerCase().includes("bad request") || 
+                   response.error?.code === "BAD_REQUEST_ERROR" ||
+                   response.error?.code === 400) {
+          toast.error(
+            `Invalid payment request (400). Error: ${errorDesc}. Please check your Razorpay configuration.`
+          );
+        } else {
+          toast.error(`Payment failed: ${errorDesc}`);
+        }
         setProcessingPlan(null);
+      });
+
+      // Handle modal close
+      razorpay.on("modal.close", function () {
+        console.log("Razorpay modal closed");
+        setProcessingPlan(null);
+      });
+
+      // Handle external close
+      razorpay.on("external.wallet.selected", function (response) {
+        console.log("External wallet selected:", response);
+      });
+
+      console.log("Opening Razorpay checkout with options:", {
+        key: options.key,
+        amount: options.amount,
+        order_id: options.order_id,
       });
 
       razorpay.open();
@@ -261,6 +334,30 @@ const Subscription = () => {
           <b>{subscription?.connectionsLeft ?? 2}</b>
         </p>
       )}
+
+      {/* Payment Info Note */}
+      <div className="mx-auto mb-6 max-w-2xl space-y-3">
+        <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+          <p className="text-sm text-blue-800">
+            <strong>💳 Payment Info:</strong> We accept Indian debit/credit cards, UPI, Net Banking, and Wallets. 
+            For international payments, please contact our support team.
+          </p>
+        </div>
+        
+        {/* Test Card Info */}
+        <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+          <p className="text-sm font-semibold text-yellow-800 mb-2">🧪 Test Mode - Use these test card details:</p>
+          <ul className="text-xs text-yellow-700 space-y-1 ml-4">
+            <li><strong>Card Number:</strong> 4111 1111 1111 1111</li>
+            <li><strong>Expiry:</strong> Any future date (e.g., 12/25)</li>
+            <li><strong>CVV:</strong> Any 3 digits (e.g., 123)</li>
+            <li><strong>Name:</strong> Any name</li>
+          </ul>
+          <p className="text-xs text-yellow-600 mt-2">
+            <strong>Note:</strong> If payment fails, check browser console (F12) for error details.
+          </p>
+        </div>
+      </div>
 
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-3">
         {/* ✅ Basic Plan */}
