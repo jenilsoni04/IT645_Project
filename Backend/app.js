@@ -6,6 +6,7 @@ const userRoutes = require("./routes/user");
 const suggestionsRoute = require("./routes/connect");
 const meetingRoutes = require("./routes/meeting");
 const chatRoutes = require('./routes/chat');
+const subscriptionRoutes = require("./routes/subscription");
 
 const app = express();
 
@@ -26,5 +27,5 @@ app.use("/user", userRoutes);
 app.use("/connect", suggestionsRoute);
 app.use("/meetings", meetingRoutes);
 app.use('/chat', chatRoutes);
-
+app.use("/subscription", subscriptionRoutes);
 module.exports = app;

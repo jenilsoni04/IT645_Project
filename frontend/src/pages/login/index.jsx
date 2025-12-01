@@ -3,9 +3,10 @@ import { toast } from "react-toastify";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 
-export default function LoginForm() {
-    const navigate = useNavigate();
+export default function LoginForm({ setUser }) {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -17,15 +18,31 @@ export default function LoginForm() {
 
    const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
+    if (!formData.email || !formData.password) {
+      setError("Please enter your email and password.");
+      return;
+    }
+
     try {
       const res = await axios.post("http://localhost:3000/auth/login", formData);
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       console.log("Logged in user:", res.data.user);
       toast.success(res.data.message || "Login successful!");
+      if (setUser) {
+        setUser(res.data.user);
+      } else {
+        // If setUser prop not provided, still store in localStorage
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+      }
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Login failed");
+      const msg = err.response?.data?.message || "Login failed";
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -79,6 +96,12 @@ export default function LoginForm() {
                   </svg>
                 )}
               </button>
+            </div>
+
+            <div className="min-h-[1.25rem]">
+              {error && (
+                <p className="text-xs text-red-500">{error}</p>
+              )}
             </div>
 
             <button

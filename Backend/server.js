@@ -1,15 +1,16 @@
 const dotenv = require("dotenv");
+dotenv.config();
 const { createServer } = require("http");
 const socketIo = require("socket.io");
 const connectDB = require("./config/db");
 const app = require("./app");
 const { initRealtime } = require("./services/realtime");
-
+const subscriptionCronJob = require("./utils/Subscriptioncron");
 const { initializeSocket } = require("./socket");
 const messagesRoutes = require("./routes/messages");
 const messageController = require("./controllers/messageController");
 
-dotenv.config();
+
 connectDB();
 
 const server = createServer(app);

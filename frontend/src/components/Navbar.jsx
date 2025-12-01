@@ -1,5 +1,6 @@
+// src/components/Navbar.jsx
 import React, { useState } from "react";
-import { Menu, Search, Bell, UserCircle, LogOut, X } from "lucide-react";
+import { Menu, Bell, UserCircle, LogOut, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -9,12 +10,16 @@ const navItems = [
   { label: "Profile", path: "/profile" },
   { label: "Connections", path: "/connections" },
   { label: "Chat", path: "/chat" },
+  { label: "Subscription", path: "/Subscription" }, // 👈 new
 ];
 
 const Navbar = ({ onLogout }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isActive = (path) =>
+    location.pathname === path || location.pathname.startsWith(path + "/");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -28,6 +33,7 @@ const Navbar = ({ onLogout }) => {
     <>
       <header className="fixed inset-x-0 top-0 z-50 bg-[#30187d] shadow-lg shadow-indigo-900/20">
         <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* Left: logo + mobile menu */}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -41,38 +47,29 @@ const Navbar = ({ onLogout }) => {
             <motion.button
               type="button"
               whileHover={{ scale: 1.05 }}
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/dashboard")}
               className="text-2xl font-semibold text-white"
             >
               <span className="text-indigo-200">Skill</span>Xchange
             </motion.button>
           </div>
 
-          <div className="hidden items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-white shadow-inner sm:flex sm:w-1/2 lg:w-2/5">
-            <Search className="h-5 w-5 opacity-70" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full bg-transparent text-sm placeholder:text-indigo-100/70 focus:outline-none"
-            />
-          </div>
-
+          {/* Right: links + icons */}
           <div className="flex items-center gap-2">
             <nav className="hidden items-center gap-1 md:flex">
-              {navItems.map((item) => {
-                const active = location.pathname === item.path;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`rounded-full px-4 py-2 text-sm font-medium text-white transition ${
-                      active ? "bg-white/20" : "hover:bg-white/10"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`rounded-full px-4 py-2 text-sm font-medium text-white transition ${
+                    isActive(item.path)
+                      ? "bg-white/25 shadow-sm"
+                      : "hover:bg-white/10"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </nav>
 
             <button
@@ -104,6 +101,7 @@ const Navbar = ({ onLogout }) => {
         </div>
       </header>
 
+      {/* Mobile drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div
@@ -124,6 +122,7 @@ const Navbar = ({ onLogout }) => {
                 <X className="h-5 w-5" />
               </button>
             </div>
+
             <div className="flex flex-col gap-2 px-4">
               {navItems.map((item) => (
                 <button
@@ -134,7 +133,7 @@ const Navbar = ({ onLogout }) => {
                     setDrawerOpen(false);
                   }}
                   className={`rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
-                    location.pathname === item.path
+                    isActive(item.path)
                       ? "bg-white/20"
                       : "hover:bg-white/10"
                   }`}
@@ -143,6 +142,7 @@ const Navbar = ({ onLogout }) => {
                 </button>
               ))}
             </div>
+
             <div className="mt-auto px-4 pb-8 pt-4">
               <button
                 type="button"
