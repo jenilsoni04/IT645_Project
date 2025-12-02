@@ -5,27 +5,21 @@ const fs = require("fs");
 const path = require("path");
 const axios = require('axios');
 
-// Local file storage fallback
 const uploadToLocalStorage = (buffer, filename) => {
   return new Promise((resolve, reject) => {
     try {
-      // Create uploads directory if it doesn't exist
       const uploadsDir = path.join(__dirname, '../uploads/chat');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
 
-      // Generate unique filename
       const timestamp = Date.now();
       const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = path.join(uploadsDir, `${timestamp}-${sanitizedFilename}`);
 
-      // Write file to disk
       fs.writeFileSync(filePath, buffer);
 
-      // Return full URL that can be accessed via express static
-      // Use the base URL from environment or default to localhost:3000
-      const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+      const baseUrl = process.env.BASE_URL || 'http://localhost:5173';
       const fileUrl = `${baseUrl}/uploads/chat/${timestamp}-${sanitizedFilename}`;
       
       console.log('File saved locally:', filePath);
@@ -43,13 +37,11 @@ const uploadToLocalStorage = (buffer, filename) => {
 
 const uploadBufferToCloudinary = (buffer, filename) => {
   return new Promise((resolve, reject) => {
-    // Check if Cloudinary is configured
     const isCloudinaryConfigured = 
       process.env.CLOUDINARY_CLOUD_NAME && 
       process.env.CLOUDINARY_API_KEY && 
       process.env.CLOUDINARY_SECRET_KEY;
 
-    // If Cloudinary is not configured, use local storage
     if (!isCloudinaryConfigured) {
       console.log('Cloudinary not configured, using local file storage');
       return uploadToLocalStorage(buffer, filename)
@@ -57,7 +49,6 @@ const uploadBufferToCloudinary = (buffer, filename) => {
         .catch(reject);
     }
 
-    // Determine resource type based on file extension
     const isPDF = filename.toLowerCase().endsWith('.pdf');
     const isImage = /\.(jpg|jpeg|png|gif)$/i.test(filename);
     
@@ -67,7 +58,6 @@ const uploadBufferToCloudinary = (buffer, filename) => {
       resource_type: isPDF ? "raw" : isImage ? "image" : "auto",
     };
 
-    // Remove format for PDFs as it might cause issues
     if (isPDF) {
       uploadOptions.resource_type = "raw";
     }
@@ -93,7 +83,6 @@ const uploadBufferToCloudinary = (buffer, filename) => {
           }
           console.log('File uploaded successfully:', result.secure_url);
 
-          // Verify uploaded file headers (helps debug corrupted uploads / wrong content-type)
           axios.head(result.secure_url, { timeout: 5000 })
             .then((resp) => {
               console.log('Uploaded file headers:', {
@@ -106,7 +95,6 @@ const uploadBufferToCloudinary = (buffer, filename) => {
             })
             .catch((headErr) => {
               console.warn('Could not fetch uploaded file headers:', headErr.message);
-              // Still resolve so upload flow continues; header fetch is only for diagnostics
               resolve(result);
             });
         }
@@ -197,7 +185,6 @@ exports.downloadFileByMessageId = async (messageId) => {
       throw new Error('Message or file not found');
     }
 
-    // Fetch the file from Cloudinary
     const response = await axios.get(message.fileUrl, {
       responseType: 'arraybuffer',
       timeout: 30000,
@@ -207,7 +194,6 @@ exports.downloadFileByMessageId = async (messageId) => {
     const fileName = message.fileName || 'download';
     const isPDF = fileName.toLowerCase().endsWith('.pdf');
     
-    // Determine content type
     let contentType = 'application/octet-stream';
     if (isPDF) {
       contentType = 'application/pdf';

@@ -4,7 +4,6 @@ const {
   getProfile,
 } = require("../services/userService");
 
-// GET /profile/:id
 exports.getProfile = async (req, res) => {
   try {
     const user = await getProfile(req.params.id);
@@ -14,7 +13,6 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// PUT /update-profile/:id
 exports.updateProfile = async (req, res) => {
   try {
     const { id } = req.params;
@@ -26,7 +24,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// GET /:id
 exports.getUser = async (req, res) => {
   try {
     const user = await getUserById(req.params.id);

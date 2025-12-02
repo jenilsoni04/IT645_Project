@@ -14,33 +14,26 @@ exports.createOrderService = async (planName) => {
   const shortId = crypto.randomBytes(4).toString("hex");
 
   const options = {
-    // Amount must be provided in the smallest currency unit (paise for INR, cents for USD)
-    // Plan prices are defined in INR (e.g. 99, 299). If the Razorpay account/currency
-    // is set to a different currency (e.g. USD) we convert the INR price to the
-    // target currency using an environment-configured exchange rate.
+    
     currency: process.env.RAZORPAY_CURRENCY || "INR",
     amount: (() => {
       const targetCurrency = process.env.RAZORPAY_CURRENCY || "INR";
-      // price is in INR
       const priceINR = plan.price;
       if (targetCurrency === "INR") {
-        return priceINR * 100; // paise
+        return priceINR * 100;
       }
 
-      // Example: convert INR -> USD using INR_TO_USD_RATE environment variable
-      // Default fallback rate (approx): 1 USD = 82 INR
+      
       const inrToUsd = parseFloat(process.env.INR_TO_USD_RATE) || 82;
       if (targetCurrency === "USD") {
-        // Convert price in INR to USD, then to cents
         const priceUSD = priceINR / inrToUsd;
-        return Math.round(priceUSD * 100); // cents
+        return Math.round(priceUSD * 100);
       }
 
-      // For other currencies, assume 1:1 (best-effort) and multiply by 100
       return priceINR * 100;
     })(),
     receipt: `receipt_${shortId}`,
-    payment_capture: 1, // Auto capture payment
+    payment_capture: 1, 
   };
 
   console.log("Creating Razorpay order with options:", options);
@@ -50,14 +43,12 @@ exports.createOrderService = async (planName) => {
     console.log("Razorpay order created:", order.id);
   } catch (err) {
     console.error("Razorpay order creation failed:", err && err.error ? err.error : err);
-    // Detect common account limitations like international cards not allowed
     const reason = err?.error?.description || err?.error?.reason || err?.message || '';
     if (typeof reason === 'string' && reason.toLowerCase().includes('international')) {
       const e = new Error('Payments from international cards are not allowed on this account. Enable international payments in Razorpay dashboard or contact support.');
       e.status = 400;
       throw e;
     }
-    // Re-throw a generic error for the caller to handle
     const e = new Error('Failed to create payment order with Razorpay');
     e.original = err;
     throw e;
@@ -67,7 +58,7 @@ exports.createOrderService = async (planName) => {
     orderId: order.id,
     amount: options.amount,
     currency: options.currency,
-    keyId: process.env.RAZORPAY_KEY_ID, // Send key ID to frontend
+    keyId: process.env.RAZORPAY_KEY_ID,
   };
 };
 

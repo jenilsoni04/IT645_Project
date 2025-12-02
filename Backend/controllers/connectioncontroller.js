@@ -4,10 +4,9 @@ const {
   acceptConnectionRequest,
   rejectConnectionRequest,
   getConnectionStatus,
-  getUserConnections, // already imported, don’t redefine it
+  getUserConnections,
 } = require("../services/connection");
 
-// 🔹 Fetch suggested users
 const fetchSuggestions = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -20,7 +19,6 @@ const fetchSuggestions = async (req, res) => {
   }
 };
 
-// 🔹 Send connection request
 const sendRequest = async (req, res) => {
   try {
     const senderId = req.user._id;
@@ -32,7 +30,6 @@ const sendRequest = async (req, res) => {
   }
 };
 
-// 🔹 Accept connection request
 const acceptRequest = async (req, res) => {
   try {
     const { senderId, receiverId } = req.body;
@@ -43,7 +40,6 @@ const acceptRequest = async (req, res) => {
   }
 };
 
-// 🔹 Reject connection request
 const rejectRequest = async (req, res) => {
   try {
     const { senderId, receiverId } = req.body;
@@ -54,7 +50,6 @@ const rejectRequest = async (req, res) => {
   }
 };
 
-// 🔹 Check connection request status
 const requestStatus = async (req, res) => {
   try {
     const { senderId, receiverId } = req.query;
@@ -65,7 +60,6 @@ const requestStatus = async (req, res) => {
   }
 };
 
-// 🔹 Fetch user connections
 const fetchConnections = async (req, res) => {
   try {
     const userId = req.user._id;

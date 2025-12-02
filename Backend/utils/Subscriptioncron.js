@@ -2,7 +2,6 @@ const cron = require("node-cron");
 const Subscription = require("../models/Subscription");
 const User = require("../models/User");
 
-// Reset Free Users Monthly
 cron.schedule("0 0 1 * *", async () => {
   try {
     await User.updateMany(
@@ -14,7 +13,6 @@ cron.schedule("0 0 1 * *", async () => {
   }
 });
 
-// Expiry Check Daily
 cron.schedule("0 0 * * *", async () => {
   try {
     const expired = await Subscription.find({

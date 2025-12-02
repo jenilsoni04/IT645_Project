@@ -1,8 +1,5 @@
 const { fetchRecommendedVideos } = require("../services/recommendationService");
 
-// POST /recommendations
-// Body: { interests?: string[], channel?: string }
-// If interests missing/empty, falls back to req.user.skillsWant
 exports.recommendVideos = async (req, res) => {
   try {
     const bodyInterests = Array.isArray(req.body?.interests)

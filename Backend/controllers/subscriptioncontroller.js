@@ -26,7 +26,6 @@ exports.verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Missing required payment details" });
     }
 
-    // Ensure userId matches authenticated user
     if (String(req.user._id) !== String(userId)) {
       return res.status(403).json({ message: "Unauthorized" });
     }
@@ -43,7 +42,6 @@ exports.getSubscriptionStatus = async (req, res) => {
   try {
     const { userId } = req.params;
     
-    // Ensure userId matches authenticated user
     if (String(req.user._id) !== String(userId)) {
       return res.status(403).json({ message: "Unauthorized" });
     }

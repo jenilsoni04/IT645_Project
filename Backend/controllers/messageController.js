@@ -23,7 +23,6 @@ exports.getMessages = async (req, res) => {
       userId
     );
 
-    // just return messages
     res.json(result.messages);
   } catch (error) {
     console.error("getMessages error:", error);
@@ -49,7 +48,7 @@ exports.sendMessage = async (req, res) => {
       return res.status(400).json({ message: "Receiver ID is required" });
     }
 
-    // Validate file if present
+
     if (fileData) {
       if (fileData.size > 10 * 1024 * 1024) {
         return res.status(400).json({ message: "File size exceeds 10MB limit" });
@@ -75,15 +74,14 @@ exports.sendMessage = async (req, res) => {
     console.error("sendMessage error:", error);
     console.error("Error stack:", error.stack);
     
-    // Determine appropriate status code
     let statusCode = 500;
     let errorMessage = "Server error";
     
     if (error.message?.includes("not configured") || error.message?.includes("Cloudinary")) {
-      statusCode = 503; // Service Unavailable
+      statusCode = 503;
       errorMessage = "File upload service is not available. Please contact support.";
     } else if (error.message?.includes("upload failed") || error.message?.includes("upload")) {
-      statusCode = 502; // Bad Gateway
+      statusCode = 502;
       errorMessage = error.message || "File upload failed. Please try again.";
     } else if (error.message) {
       errorMessage = error.message;

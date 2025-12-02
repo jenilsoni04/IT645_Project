@@ -57,7 +57,6 @@ const sendConnectionRequest = async (senderId, receiverId) => {
   return { message: "Connection request sent" };
 };
 
-// ✅ Accept connection
 const acceptConnectionRequest = async (senderId, receiverId) => {
   const request = await ConnectionRequest.findOne({
     senderId,
@@ -81,7 +80,6 @@ const acceptConnectionRequest = async (senderId, receiverId) => {
     status: "active",
   });
 
-  // Check if any of them ran out of connections
   if (
     (!senderSubscription && sender.freeConnectionLeft <= 0) ||
     (!receiverSubscription && receiver.freeConnectionLeft <= 0)
