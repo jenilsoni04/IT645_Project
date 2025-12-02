@@ -74,7 +74,7 @@ export default function RecommendationsPage() {
     if (!loadingUser) {
       fetchVideos();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [loadingUser, channel]);
 
   const handleSkillInputChange = (e) => {

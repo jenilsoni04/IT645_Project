@@ -13,8 +13,6 @@ function MessageBubble({ message, isOwnMessage }) {
   const handleFileDownload = (e) => {
     e.preventDefault();
     if (message._id) {
-      // Use backend proxy endpoint to download file
-      // This ensures proper Content-Disposition headers for direct download
       const downloadUrl = `/api/messages/download/${message._id}`;
       const link = document.createElement('a');
       link.href = downloadUrl;

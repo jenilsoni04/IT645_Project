@@ -1,4 +1,3 @@
-// src/components/Navbar.jsx
 import React, { useState } from "react";
 import { Menu, Bell, UserCircle, LogOut, X } from "lucide-react";
 import { motion } from "framer-motion";
@@ -33,7 +32,6 @@ const Navbar = ({ onLogout }) => {
     <>
       <header className="fixed inset-x-0 top-0 z-50 bg-[#30187d] shadow-lg shadow-indigo-900/20">
         <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Left: logo + mobile menu */}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -101,7 +99,6 @@ const Navbar = ({ onLogout }) => {
         </div>
       </header>
 
-      {/* Mobile drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div

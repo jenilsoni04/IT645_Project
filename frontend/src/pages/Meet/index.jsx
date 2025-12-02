@@ -12,8 +12,8 @@ const extractMeetingId = (input) => {
       const parts = url.pathname.split("/").filter(Boolean);
       return parts[parts.length - 1] || "";
     }
-  } catch (_) {
-    console.warn("Invalid URL format");
+  } catch (e) {
+    console.warn("Invalid URL format: ", e.message);
   }
   return input.trim();
 };

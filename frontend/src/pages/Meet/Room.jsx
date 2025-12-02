@@ -67,7 +67,7 @@ export default function MeetingRoom() {
         [targetSocketId]: { ...(prev[targetSocketId] || {}), stream, pc },
       }));
     };
-    // ICE
+
     pc.onicecandidate = (e) => {
       if (e.candidate && socketRef.current) {
         socketRef.current.emit("rtc-ice-candidate", {
@@ -133,39 +133,33 @@ export default function MeetingRoom() {
         }
       }
 
-      // Connect socket
       const token = localStorage.getItem("token");
       const s = getSocket(token || "");
       socketRef.current = s;
 
-      // Receive list of current peers
       s.on("rtc-room-users", async ({ peers }) => {
         for (const targetSocketId of peers) {
           const pc = createPeerConnection(targetSocketId);
           peersRef.current[targetSocketId].pc = pc;
-          // Create offer
+
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           s.emit("rtc-offer", { targetSocketId, description: offer, roomId });
         }
       });
 
-      // A new user joined: wait for them to send an offer to avoid glare
       s.on("rtc-user-joined", async ({ socketId: targetSocketId }) => {
-        // Optionally pre-create the connection to be ready for incoming offer
         if (!peersRef.current[targetSocketId]) {
           const pc = createPeerConnection(targetSocketId);
           peersRef.current[targetSocketId].pc = pc;
         }
-        // Send our user info so the newcomer gets our display name
         try {
           s.emit("rtc-user-info", { roomId, userName: computedLocalName });
         } catch (e) {
-          // ignore
+          console.log("Failed to send user info:", e.message);
         }
       });
 
-      // Incoming offer
       s.on("rtc-offer", async ({ fromSocketId, description }) => {
         let pc = peersRef.current[fromSocketId]?.pc;
         if (!pc) {
@@ -173,23 +167,19 @@ export default function MeetingRoom() {
           peersRef.current[fromSocketId].pc = pc;
         }
         await pc.setRemoteDescription(new RTCSessionDescription(description));
-        // Remote description set: now ready to accept ICE
         markRemoteReady(fromSocketId);
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         s.emit("rtc-answer", { targetSocketId: fromSocketId, description: answer, roomId });
       });
 
-      // Incoming answer
       s.on("rtc-answer", async ({ fromSocketId, description }) => {
         const pc = peersRef.current[fromSocketId]?.pc;
         if (!pc) return;
         await pc.setRemoteDescription(new RTCSessionDescription(description));
-        // Remote description set: now ready to accept ICE
         markRemoteReady(fromSocketId);
       });
 
-      // Incoming ICE
       s.on("rtc-ice-candidate", async ({ fromSocketId, candidate }) => {
         const pc = peersRef.current[fromSocketId]?.pc;
         if (!pc || !candidate) return;
@@ -199,17 +189,15 @@ export default function MeetingRoom() {
           try {
             await pc.addIceCandidate(new RTCIceCandidate(candidate));
           } catch {
-            // ignore
+            console.error("Error adding ICE candidate");
           }
         } else {
           ensureQueue(fromSocketId).push(candidate);
         }
       });
 
-      // Peer info (name) forwarded by server
       s.on("rtc-peer-info", ({ socketId: otherSocketId, userName }) => {
         if (!otherSocketId) return;
-        // Update ref and state for UI
         if (!peersRef.current[otherSocketId]) {
           peersRef.current[otherSocketId] = { pc: null, stream: null, remoteReady: false, userName: userName || "User" };
         } else {
@@ -221,7 +209,6 @@ export default function MeetingRoom() {
         }));
       });
 
-      // Peer left
       s.on("rtc-user-left", ({ socketId }) => {
         const pc = peersRef.current[socketId]?.pc;
         if (pc) {
@@ -235,21 +222,18 @@ export default function MeetingRoom() {
         });
       });
 
-      // Join room
       s.emit("rtc-join-room", { roomId });
 
-      // Share local user info (name) with peers via server
       try {
         s.emit("rtc-user-info", { roomId, userName: computedLocalName });
       } catch (e) {
-        // ignore
+        console.log("Failed to send user info:", e.message);
       }
     };
 
     init();
     return () => {
       mounted = false;
-      // Cleanup
       try {
         socketRef.current?.off("rtc-room-users");
         socketRef.current?.off("rtc-user-joined");
@@ -270,7 +254,6 @@ export default function MeetingRoom() {
         localStream.getTracks().forEach((t) => t.stop());
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
   const toggleMic = () => {
@@ -296,25 +279,28 @@ export default function MeetingRoom() {
   const leaveMeeting = () => {
     try {
       socketRef.current?.emit("rtc-leave-room", { roomId });
-    } catch {}
-    // Close peers
+    } catch {
+      console.log("Error emitting leave room");
+    }
+    
     Object.values(peersRef.current).forEach((peerData) => {
       try { 
         if (peerData?.pc) {
           peerData.pc.close();
         }
-      } catch {}
+      } catch {
+        console.log("Error closing peer connection");
+      }
     });
     peersRef.current = {};
     setPeers({});
-    // Stop local media
     if (localStream) {
       localStream.getTracks().forEach((t) => t.stop());
     }
     try {
       removeMeetingNotification(roomId);
     } catch (e) {
-      // ignore
+      console.error("Error removing meeting notification on leave:", e);
     }
     navigate("/connections");
   };
@@ -330,7 +316,6 @@ export default function MeetingRoom() {
   return (
     <Box sx={{ height: "calc(100vh - 80px)", display: "flex", flexDirection: "column" }}>
       <Box sx={{ flex: 1, display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1, p: 1 }}>
-        {/* Local Video */}
         <Box sx={{ position: "relative", background: "#000", borderRadius: 2, overflow: "hidden" }}>
           <video
             ref={localVideoRef}
@@ -357,7 +342,6 @@ export default function MeetingRoom() {
           </Box>
         </Box>
 
-        {/* Remote Videos */}
         {Object.entries(peers).map(([sid, p]) => (
           <Box
             key={sid}

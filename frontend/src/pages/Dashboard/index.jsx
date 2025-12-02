@@ -12,7 +12,6 @@ const Dashboard = () => {
   const [statuses, setStatuses] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch logged-in user
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
@@ -38,7 +37,6 @@ const Dashboard = () => {
     fetchUser();
   }, [navigate]);
 
-  // ✅ Fetch existing connections
   useEffect(() => {
     const fetchConnections = async () => {
       const token = localStorage.getItem("token");
@@ -56,7 +54,6 @@ const Dashboard = () => {
     if (user) fetchConnections();
   }, [user]);
 
-  // ✅ Fetch connection suggestions
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (!user) return;
@@ -79,7 +76,6 @@ const Dashboard = () => {
     fetchSuggestions();
   }, [user]);
 
-  // ✅ Fetch statuses
   useEffect(() => {
     const fetchStatuses = async () => {
       if (!suggestions.length) return;
@@ -106,7 +102,6 @@ const Dashboard = () => {
     if (user && suggestions.length) fetchStatuses();
   }, [suggestions, user]);
 
-  // ✅ Handlers
   const handleConnect = async (receiverId) => {
     try {
       const token = localStorage.getItem("token");
@@ -214,7 +209,7 @@ const Dashboard = () => {
 
           {!suggestions.length ? (
             <div className="rounded-2xl border border-dashed border-emerald-100 bg-emerald-50/60 p-10 text-center text-emerald-600">
-              No mutual skill matches found yet 😔
+              No mutual skill matches found yet
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -31,5 +31,5 @@ export const MeetNotificationListener = () => {
     };
   }, [addMeetingNotification]);
 
-  return null; // A non-rendering component
+  return null;
 };

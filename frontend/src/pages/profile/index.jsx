@@ -13,7 +13,6 @@ export default function Profile() {
   const [openEdit, setOpenEdit] = useState(false);
   const [formData, setFormData] = useState({ name: "", skillsHave: "", skillsWant: "" });
 
-  // Fetch current user
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
@@ -44,7 +43,6 @@ export default function Profile() {
     fetchUser();
   }, [navigate]);
 
-  // Handle profile update
   const handleUpdateProfile = async () => {
     const token = localStorage.getItem("token");
     if (!user?._id) return;

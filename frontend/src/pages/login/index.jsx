@@ -34,7 +34,6 @@ export default function LoginForm({ setUser }) {
       if (setUser) {
         setUser(res.data.user);
       } else {
-        // If setUser prop not provided, still store in localStorage
         localStorage.setItem("user", JSON.stringify(res.data.user));
       }
       navigate("/dashboard");

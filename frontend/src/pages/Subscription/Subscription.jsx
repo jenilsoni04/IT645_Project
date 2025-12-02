@@ -5,7 +5,6 @@ import { toast } from "react-toastify";
 
 const API_BASE_URL = "http://localhost:3000/subscription";
 
-// Load Razorpay script dynamically if not already loaded
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
     if (window.Razorpay) {
@@ -18,7 +17,7 @@ const loadRazorpayScript = () => {
     script.onload = () => resolve();
     script.onerror = () => {
       console.error("Failed to load Razorpay script");
-      resolve(); // Resolve anyway to prevent hanging
+      resolve(); 
     };
     document.body.appendChild(script);
   });
@@ -37,17 +36,15 @@ const Subscription = () => {
   const [processingPlan, setProcessingPlan] = useState(null);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
-  // Load Razorpay script on mount
   useEffect(() => {
     loadRazorpayScript().then(() => {
       setRazorpayLoaded(true);
     });
   }, []);
 
-  // ✅ Fetch subscription status
   useEffect(() => {
     if (authLoading) {
-      return; // Wait for auth to finish loading
+      return;
     }
     
     if (!currentUser || !currentUser._id) {
@@ -74,7 +71,7 @@ const Subscription = () => {
           expiryDate,
         });
       } catch (err) {
-        toast.error("Failed to load subscription status");
+        toast.error("Failed to load subscription status", err);
       } finally {
         setLoading(false);
       }
@@ -83,7 +80,6 @@ const Subscription = () => {
     fetchStatus();
   }, [currentUser, authLoading]);
 
-  // ✅ Handle Subscribe
   const handleSubscribe = async (planName) => {
     if (!currentUser?._id) {
       toast.error("Please login to subscribe");
@@ -92,7 +88,6 @@ const Subscription = () => {
 
     if (!razorpayLoaded || !window.Razorpay) {
       toast.error("Razorpay is loading. Please wait a moment and try again.");
-      // Try to load again
       await loadRazorpayScript();
       setRazorpayLoaded(!!window.Razorpay);
       if (!window.Razorpay) {
@@ -104,7 +99,6 @@ const Subscription = () => {
     try {
       setProcessingPlan(planName);
 
-      // 1️⃣ Create Order
       const token = localStorage.getItem("token");
       console.log("Creating order for plan:", planName);
       
@@ -127,7 +121,7 @@ const Subscription = () => {
       }
 
       const options = {
-        key: orderData.keyId || "rzp_test_dMsLDQLJDCGKIF", // Use key from backend if provided
+        key: orderData.keyId || "rzp_test_dMsLDQLJDCGKIF",
         amount: orderData.amount,
         currency: orderData.currency || "INR",
         order_id: orderData.orderId,
@@ -148,7 +142,6 @@ const Subscription = () => {
         handler: async (response) => {
           console.log("Payment successful, response:", response);
           try {
-            // 2️⃣ Verify Payment
             const token = localStorage.getItem("token");
             
             if (!response.razorpay_payment_id || !response.razorpay_order_id || !response.razorpay_signature) {
@@ -179,7 +172,6 @@ const Subscription = () => {
             console.log("Payment verified successfully:", verifyRes.data);
             toast.success("Subscription activated successfully!");
 
-            // Refresh subscription status
             try {
               const statusRes = await axios.get(
                 `${API_BASE_URL}/status/${currentUser._id}`,
@@ -199,7 +191,6 @@ const Subscription = () => {
               });
             } catch (refreshErr) {
               console.error("Failed to refresh subscription status:", refreshErr);
-              // Still show success since payment was verified
             }
           } catch (err) {
             console.error("Payment verification error:", err);
@@ -227,7 +218,6 @@ const Subscription = () => {
 
       const razorpay = new window.Razorpay(options);
       
-      // Handle payment failure
       razorpay.on("payment.failed", function (response) {
         console.error("Payment failed - Full response:", JSON.stringify(response, null, 2));
         console.error("Error object:", response.error);
@@ -247,7 +237,6 @@ const Subscription = () => {
                          response.error?.step || 
                          "Unknown error";
         
-        // Close the Razorpay modal so the built-in error page does not stay visible
         try {
           if (razorpay && typeof razorpay.close === 'function') {
             razorpay.close();
@@ -256,7 +245,6 @@ const Subscription = () => {
           console.warn('Failed to close Razorpay modal programmatically:', closeErr);
         }
 
-        // Handle specific international card error and surface a friendly message
         if (errorDesc.toLowerCase().includes("international") ||
             errorDesc.toLowerCase().includes("not supported") ||
             response.error?.reason === 'international_transaction_not_allowed') {
@@ -275,13 +263,11 @@ const Subscription = () => {
         setProcessingPlan(null);
       });
 
-      // Handle modal close
       razorpay.on("modal.close", function () {
         console.log("Razorpay modal closed");
         setProcessingPlan(null);
       });
 
-      // Handle external close
       razorpay.on("external.wallet.selected", function (response) {
         console.log("External wallet selected:", response);
       });
@@ -345,7 +331,6 @@ const Subscription = () => {
         </p>
       )}
 
-      {/* Payment Info Note */}
       <div className="mx-auto mb-6 max-w-2xl space-y-3">
         <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
           <p className="text-sm text-blue-800">
@@ -354,7 +339,6 @@ const Subscription = () => {
           </p>
         </div>
         
-        {/* Test Card Info */}
         <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-4">
           <p className="text-sm font-semibold text-yellow-800 mb-2">🧪 Test Mode - Use these test card details:</p>
           <ul className="text-xs text-yellow-700 space-y-1 ml-4">
@@ -370,7 +354,6 @@ const Subscription = () => {
       </div>
 
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-3">
-        {/* ✅ Basic Plan */}
         <PlanCard
           title="Basic Plan"
           price={99}
@@ -384,7 +367,6 @@ const Subscription = () => {
           onClick={() => handleSubscribe("Basic")}
         />
 
-        {/* ✅ Premium Plan */}
         <PlanCard
           title="Premium Plan"
           price={299}
@@ -399,7 +381,6 @@ const Subscription = () => {
           highlighted
         />
 
-        {/* ✅ Coming Soon */}
         <PlanCard
           title="Coming Soon"
           price={0}

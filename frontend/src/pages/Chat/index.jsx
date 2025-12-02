@@ -20,8 +20,8 @@ function Chat({ user, setUser }) {
 
     const newSocket = io('http://localhost:3000', {
       auth: { token },
-      query: { token }, // Also send in query for compatibility
-      transports: ['websocket', 'polling'], // Allow fallback to polling for Chrome
+      query: { token },
+      transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
@@ -30,7 +30,6 @@ function Chat({ user, setUser }) {
 
     newSocket.on('connect', () => {
       console.log('Socket connected:', newSocket.id);
-      // Join with user ID after connection
       const userId = user?._id || JSON.parse(localStorage.getItem('user') || '{}')?._id;
       if (userId) {
         console.log('Joining socket with userId:', userId);
@@ -52,7 +51,6 @@ function Chat({ user, setUser }) {
     newSocket.on('disconnect', (reason) => {
       console.log('Socket disconnected:', reason);
       if (reason === 'io server disconnect') {
-        // Server disconnected, reconnect manually
         newSocket.connect();
       }
     });

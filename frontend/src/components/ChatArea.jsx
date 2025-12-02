@@ -85,7 +85,6 @@ function ChatArea({ selectedUser, currentUser, socket }) {
     const file = fileInputRef.current?.files[0];
     if (!inputMessage.trim() && !file) return;
 
-    // Check if socket is connected
     if (!socket || !socket.connected) {
       console.error('Socket not connected. Cannot send message.');
       alert('Connection lost. Please refresh the page.');
@@ -97,7 +96,6 @@ function ChatArea({ selectedUser, currentUser, socket }) {
       formData.append('receiverId', selectedUser._id);
 
       if (file) {
-        // Validate file before sending
         if (file.size > 10 * 1024 * 1024) {
           alert('File size exceeds 10MB limit');
           return;
@@ -129,7 +127,6 @@ function ChatArea({ selectedUser, currentUser, socket }) {
 
       const savedMessage = res.data;
 
-      // Emit to socket for real-time delivery
       if (socket && socket.connected) {
         socket.emit('sendMessage', { savedMessage });
       }
@@ -156,7 +153,6 @@ function ChatArea({ selectedUser, currentUser, socket }) {
         errorMsg = err.message;
       }
       
-      // Show user-friendly error message
       if (errorMsg.includes('not configured') || errorMsg.includes('not available')) {
         alert('File upload service is not configured. Please contact support or try sending a text message.');
       } else if (errorMsg.includes('upload failed') || errorMsg.includes('upload')) {
@@ -195,7 +191,6 @@ function ChatArea({ selectedUser, currentUser, socket }) {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-blue-50">
-      {/* Header */}
       <div className="flex items-center gap-3 px-5 py-3 bg-white border-b border-gray-200 mt-3">
         <div className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center font-semibold">
           {selectedUser.name?.charAt(0).toUpperCase()}
@@ -205,7 +200,6 @@ function ChatArea({ selectedUser, currentUser, socket }) {
         </h3>
       </div>
 
-      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-2 py-2">
         {loading ? (
           <div className="h-full flex items-center justify-center">
@@ -247,7 +241,6 @@ function ChatArea({ selectedUser, currentUser, socket }) {
         )}
       </div>
 
-      {/* Input Area */}
       <form
         onSubmit={handleSendMessage}
         className="flex items-center gap-2 px-3 py-2 bg-white border-t border-gray-200"
@@ -263,7 +256,6 @@ function ChatArea({ selectedUser, currentUser, socket }) {
               if (!inputMessage) {
                 setInputMessage(fileName);
               }
-              // Validate file size (10MB limit)
               if (e.target.files[0].size > 10 * 1024 * 1024) {
                 alert('File size exceeds 10MB limit');
                 e.target.value = '';

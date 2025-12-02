@@ -3,12 +3,10 @@ import React from 'react';
 function UserList({ users, selectedUser, onSelectUser, loading, error }) {
   return (
     <div className="w-[300px] h-full flex flex-col bg-gray-50 border-r border-gray-200 flex-shrink-0 shadow-sm">
-      {/* Header */}
       <div className="px-4 py-4 bg-blue-700 text-white mt-3">
         <h3 className="text-xl font-semibold leading-tight">Chat</h3>
       </div>
 
-      {/* Content */}
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-blue-700">Loading users...</p>

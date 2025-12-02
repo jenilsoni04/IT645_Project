@@ -59,7 +59,6 @@ const navigate = useNavigate();
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f0f4f8] to-[#e9eff6] p-2">
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-xl shadow-lg">
-          {/* Stepper */}
           <div className="mb-8">
             <div className="flex items-center justify-center">
               {steps.map((label, index) => (

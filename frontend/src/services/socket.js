@@ -54,15 +54,9 @@
 // }
 
 
-// src/services/socket.js
 import { io } from 'socket.io-client';
 
 let socket = null;
-
-/**
- * KEEP THIS FUNCTION EXACT (per your request).
- * If socket already exists, returns it. Otherwise creates a socket using query token.
- */
 export function getSocket(token) {
   if (socket) return socket;
   socket = io("http://localhost:3000", {
@@ -73,20 +67,13 @@ export function getSocket(token) {
   return socket;
 }
 
-/**
- * Initialize socket with auth in `auth` (preferred) and optional join.
- * If a socket already exists and is connected, it will reuse it and emit join.
- * This function can be used instead of getSocket(token) when you want `auth` field
- * and to emit a 'join' after connect.
- */
+
 export function initSocket(token, userId) {
-  // If socket already exists and connected, reuse and ensure join emitted
   if (socket && socket.connected) {
     if (userId) socket.emit('join', userId);
     return socket;
   }
 
-  // Create socket using auth (handshake.auth)
   socket = io('http://localhost:3000', {
     auth: token ? { token } : undefined,
     transports: ['websocket'],
@@ -111,18 +98,11 @@ export function initSocket(token, userId) {
   return socket;
 }
 
-/**
- * Returns the current socket instance (no creation). Named differently to avoid
- * clashing with getSocket(token) which you asked to keep exact.
- */
 export function getSocketInstance() {
   return socket;
 }
 
-/**
- * KEEP THIS FUNCTION EXACT (per your request).
- * Disconnects and nullifies socket with try/catch.
- */
+
 export function disconnectSocket() {
   if (socket) {
     try {
