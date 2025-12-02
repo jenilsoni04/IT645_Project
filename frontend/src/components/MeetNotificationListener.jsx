@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { getSocket } from "../services/socket";
-import { useNotifications } from "../context/NotificationContext";
+import useNotifications from "../context/useNotifications";
 
 export const MeetNotificationListener = () => {
   const { addMeetingNotification, removeMeetingNotification } = useNotifications();

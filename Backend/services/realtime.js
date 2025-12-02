@@ -82,15 +82,18 @@
 //     try {
 //       if (token) {
 //         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//         userId = String(decoded.userId);
+          userId = String(decoded.userId || decoded.id || decoded._id || decoded.user || decoded.sub || '');
+          if (!userId) userId = null;
 //       }
 //     } catch {
-//       console.error("Socket authentication failed");
+        console.error("Socket authentication failed:", err && err.message ? err.message : err);
 //     }
 
 //     if (userId) {
 //       addUserSocket(userId, socket.id);
+        console.log(`Socket connected: userId=${userId}, socketId=${socket.id}`);
 //     }
+        console.warn(`Socket connected without valid userId, socketId=${socket.id}`);
 
 //     socket.on("rtc-join-room", ({ roomId }) => {
 //       if (!roomId) return;
@@ -181,10 +184,19 @@ function removeUserSocket(userId, socketId) {
 }
 
 function emitToUser(io, userId, event, payload) {
-  const set = userIdToSocketIds.get(String(userId));
-  if (!set) return;
+  const key = String(userId);
+  const set = userIdToSocketIds.get(key);
+  if (!set || set.size === 0) {
+    console.warn(`emitToUser: no active sockets for userId=${key}, event=${event}`);
+    return;
+  }
   for (const sid of set) {
-    io.to(sid).emit(event, payload);
+    try {
+      io.to(sid).emit(event, payload);
+      console.log(`emitToUser: emitted '${event}' to socket=${sid} for userId=${key}`);
+    } catch (e) {
+      console.error(`emitToUser: failed to emit to socket=${sid} for userId=${key}:`, e && e.message ? e.message : e);
+    }
   }
 }
 

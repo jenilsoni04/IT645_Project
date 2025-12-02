@@ -21,8 +21,24 @@ exports.createOrderService = async (planName) => {
   };
 
   console.log("Creating Razorpay order with options:", options);
-  const order = await razorpay.orders.create(options);
-  console.log("Razorpay order created:", order.id);
+  let order;
+  try {
+    order = await razorpay.orders.create(options);
+    console.log("Razorpay order created:", order.id);
+  } catch (err) {
+    console.error("Razorpay order creation failed:", err && err.error ? err.error : err);
+    // Detect common account limitations like international cards not allowed
+    const reason = err?.error?.description || err?.error?.reason || err?.message || '';
+    if (typeof reason === 'string' && reason.toLowerCase().includes('international')) {
+      const e = new Error('Payments from international cards are not allowed on this account. Enable international payments in Razorpay dashboard or contact support.');
+      e.status = 400;
+      throw e;
+    }
+    // Re-throw a generic error for the caller to handle
+    const e = new Error('Failed to create payment order with Razorpay');
+    e.original = err;
+    throw e;
+  }
 
   return {
     orderId: order.id,

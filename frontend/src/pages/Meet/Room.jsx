@@ -7,7 +7,7 @@ import VideocamIcon from "@mui/icons-material/Videocam";
 import VideocamOffIcon from "@mui/icons-material/VideocamOff";
 import CallEndIcon from "@mui/icons-material/CallEnd";
 import { getSocket } from "../../services/socket";
-import { useNotifications } from "../../context/NotificationContext";
+import useNotifications from "../../context/useNotifications";
 import { toast } from "react-toastify";
 
 const STUN_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
