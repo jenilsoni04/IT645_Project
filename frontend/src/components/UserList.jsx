@@ -2,10 +2,10 @@ import React from 'react';
 
 function UserList({ users, selectedUser, onSelectUser, loading, error }) {
   return (
-    <div className="w-[300px] h-full flex flex-col bg-gray-100 border-r border-gray-200 flex-shrink-0">
+    <div className="w-[300px] h-full flex flex-col bg-gray-50 border-r border-gray-200 flex-shrink-0 shadow-sm">
       {/* Header */}
-      <div className="px-4 py-3 bg-blue-700 text-white">
-        <h3 className="text-base font-semibold">Chat</h3>
+      <div className="px-4 py-4 bg-blue-700 text-white mt-3">
+        <h3 className="text-xl font-semibold leading-tight">Chat</h3>
       </div>
 
       {/* Content */}
@@ -33,11 +33,11 @@ function UserList({ users, selectedUser, onSelectUser, loading, error }) {
               <React.Fragment key={user._id}>
                 <button
                   onClick={() => onSelectUser(user)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
+                  className={`w-full flex items-center gap-1 px-3 py-3 transition-colors focus:outline-none ${
                     isSelected
-                      ? "bg-white hover:bg-blue-50"
-                      : "bg-gray-100 hover:bg-blue-50"
-                  }`}
+                      ? "bg-white hover:bg-white border-l-4 border-indigo-500"
+                      : "bg-gray-50 hover:bg-blue-50"
+                  } rounded-r-lg`}
                 >
                   <div className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center font-semibold flex-shrink-0">
                     {user.name?.charAt(0).toUpperCase()}
