@@ -247,13 +247,23 @@ const Subscription = () => {
                          response.error?.step || 
                          "Unknown error";
         
-        // Handle specific international card error
-        if (errorDesc.toLowerCase().includes("international") || 
-            errorDesc.toLowerCase().includes("not supported")) {
+        // Close the Razorpay modal so the built-in error page does not stay visible
+        try {
+          if (razorpay && typeof razorpay.close === 'function') {
+            razorpay.close();
+          }
+        } catch (closeErr) {
+          console.warn('Failed to close Razorpay modal programmatically:', closeErr);
+        }
+
+        // Handle specific international card error and surface a friendly message
+        if (errorDesc.toLowerCase().includes("international") ||
+            errorDesc.toLowerCase().includes("not supported") ||
+            response.error?.reason === 'international_transaction_not_allowed') {
           toast.error(
-            "International cards are not supported. Please use an Indian card or contact support for alternative payment methods."
+            "International cards are not supported by this merchant account. Please use an Indian card, UPI, or Netbanking, or contact support."
           );
-        } else if (errorDesc.toLowerCase().includes("bad request") || 
+        } else if (errorDesc.toLowerCase().includes("bad request") ||
                    response.error?.code === "BAD_REQUEST_ERROR" ||
                    response.error?.code === 400) {
           toast.error(

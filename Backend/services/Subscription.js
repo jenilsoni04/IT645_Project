@@ -14,8 +14,31 @@ exports.createOrderService = async (planName) => {
   const shortId = crypto.randomBytes(4).toString("hex");
 
   const options = {
-    amount: plan.price * 100,
-    currency: "INR",
+    // Amount must be provided in the smallest currency unit (paise for INR, cents for USD)
+    // Plan prices are defined in INR (e.g. 99, 299). If the Razorpay account/currency
+    // is set to a different currency (e.g. USD) we convert the INR price to the
+    // target currency using an environment-configured exchange rate.
+    currency: process.env.RAZORPAY_CURRENCY || "INR",
+    amount: (() => {
+      const targetCurrency = process.env.RAZORPAY_CURRENCY || "INR";
+      // price is in INR
+      const priceINR = plan.price;
+      if (targetCurrency === "INR") {
+        return priceINR * 100; // paise
+      }
+
+      // Example: convert INR -> USD using INR_TO_USD_RATE environment variable
+      // Default fallback rate (approx): 1 USD = 82 INR
+      const inrToUsd = parseFloat(process.env.INR_TO_USD_RATE) || 82;
+      if (targetCurrency === "USD") {
+        // Convert price in INR to USD, then to cents
+        const priceUSD = priceINR / inrToUsd;
+        return Math.round(priceUSD * 100); // cents
+      }
+
+      // For other currencies, assume 1:1 (best-effort) and multiply by 100
+      return priceINR * 100;
+    })(),
     receipt: `receipt_${shortId}`,
     payment_capture: 1, // Auto capture payment
   };

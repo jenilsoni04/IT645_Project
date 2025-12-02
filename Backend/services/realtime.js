@@ -82,18 +82,18 @@
 //     try {
 //       if (token) {
 //         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          userId = String(decoded.userId || decoded.id || decoded._id || decoded.user || decoded.sub || '');
-          if (!userId) userId = null;
+          // userId = String(decoded.userId || decoded.id || decoded._id || decoded.user || decoded.sub || '');
+          // if (!userId) userId = null;
 //       }
 //     } catch {
-        console.error("Socket authentication failed:", err && err.message ? err.message : err);
+        // console.error("Socket authentication failed:", err && err.message ? err.message : err);
 //     }
 
 //     if (userId) {
 //       addUserSocket(userId, socket.id);
-        console.log(`Socket connected: userId=${userId}, socketId=${socket.id}`);
+        // console.log(`Socket connected: userId=${userId}, socketId=${socket.id}`);
 //     }
-        console.warn(`Socket connected without valid userId, socketId=${socket.id}`);
+        // console.warn(`Socket connected without valid userId, socketId=${socket.id}`);
 
 //     socket.on("rtc-join-room", ({ roomId }) => {
 //       if (!roomId) return;
