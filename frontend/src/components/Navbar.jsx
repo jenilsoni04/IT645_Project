@@ -9,7 +9,8 @@ const navItems = [
   { label: "Profile", path: "/profile" },
   { label: "Connections", path: "/connections" },
   { label: "Chat", path: "/chat" },
-  { label: "Subscription", path: "/Subscription" }, // 👈 new
+  { label: "Recommendations", path: "/recommendations" },
+  { label: "Subscription", path: "/subscription" },
 ];
 
 const Navbar = ({ onLogout }) => {

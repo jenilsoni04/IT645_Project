@@ -14,6 +14,7 @@ import MeetHome from "./pages/Meet";
 import MeetingRoom from "./pages/Meet/Room";
 import Chat from "./pages/Chat";
 import Subscription from "./pages/Subscription/Subscription";
+import RecommendationsPage from "./pages/Recommendations";
 
 // inside <Routes>
 
@@ -84,6 +85,7 @@ function App() {
           <Route path="/meet/:id" element={<MeetingRoom />} />
           <Route path="/chat" element={<Chat user={user} setUser={setUser} />} />
           <Route path="/subscription" element={<Subscription />} />
+          <Route path="/recommendations" element={<RecommendationsPage />} />
         </Route>
       </Routes>
     </Router>
