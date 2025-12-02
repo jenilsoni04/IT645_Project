@@ -38,9 +38,14 @@ function removeUserSocket(userId, socketId) {
 
 function emitToUser(io, userId, event, payload) {
   const set = userIdToSocketIds.get(String(userId));
-  if (!set) return;
+  console.log(`[emitToUser] Attempting to emit '${event}' to userId=${userId}. Active sockets: ${set ? set.size : 0}`);
+  if (!set) {
+    console.warn(`[emitToUser] No active sockets for userId=${userId}`);
+    return;
+  }
   for (const sid of set) {
     io.to(sid).emit(event, payload);
+    console.log(`[emitToUser] Emitted '${event}' to socket=${sid} for userId=${userId}`);
   }
 }
 
@@ -71,29 +76,54 @@ function leaveRoom(socket, roomId) {
   }
 }
 
-function initRealtime(server) {
-  const io = new Server(server, {
-    cors: { origin: "*", methods: ["GET", "POST"] },
-  });
+function initRealtime(io) {
+  // NOTE: io is already created and configured in server.js
+  if (!io) {
+    console.error('[initRealtime] ERROR: io instance is null or undefined');
+    return;
+  }
+  console.log('[initRealtime] Registering socket connection handlers on existing io instance');
 
   io.on("connection", (socket) => {
-    const { token } = socket.handshake.query || {};
+    // Accept token from handshake.auth (preferred), handshake.query (legacy),
+    // or from cookies sent by the browser in the handshake headers.
+    let token = socket.handshake?.auth?.token || socket.handshake?.query?.token;
+    console.log(`[Socket Connection] socketId=${socket.id}, auth.token=${!!socket.handshake?.auth?.token}, query.token=${!!socket.handshake?.query?.token}`);
+    
     let userId = null;
     try {
-      if (token) {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          userId = String(decoded.userId || decoded.id || decoded._id || decoded.user || decoded.sub || '');
-          if (!userId) userId = null;
+      if (!token && socket.handshake && socket.handshake.headers && socket.handshake.headers.cookie) {
+        console.log(`[Socket Connection] Attempting to parse token from cookies`);
+        const raw = socket.handshake.headers.cookie.split(';').map((c) => c.trim());
+        for (const pair of raw) {
+          const [k, v] = pair.split('=');
+          if (k === 'token') {
+            token = decodeURIComponent(v || '');
+            console.log(`[Socket Connection] Found token in cookies`);
+            break;
+          }
+        }
       }
-    } catch {
-        console.error("Socket authentication failed:", err && err.message ? err.message : err);
+
+      if (token) {
+        console.log(`[Socket Connection] Attempting to verify token...`);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = String(decoded.userId || decoded.id || decoded._id || (decoded.user && (decoded.user.id || decoded.user._id)) || decoded.sub || '');
+        console.log(`[Socket Connection] Token decoded. Extracted userId=${userId}`);
+        if (!userId) userId = null;
+      } else {
+        console.warn(`[Socket Connection] No token found in auth, query, or cookies`);
+      }
+    } catch (err) {
+      console.error('Socket authentication failed:', err && err.message ? err.message : err);
     }
 
     if (userId) {
       addUserSocket(userId, socket.id);
-        console.log(`Socket connected: userId=${userId}, socketId=${socket.id}`);
+      console.log(`Socket connected: userId=${userId}, socketId=${socket.id}`);
+    } else {
+      console.warn(`Socket connected without valid userId, socketId=${socket.id}`);
     }
-        console.warn(`Socket connected without valid userId, socketId=${socket.id}`);
 
     socket.on("rtc-join-room", ({ roomId }) => {
       if (!roomId) return;

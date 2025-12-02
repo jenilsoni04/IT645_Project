@@ -29,6 +29,8 @@ exports.createMeeting = async (req, res) => {
         const hostUser = await User.findById(hostId);
         const hostName = hostUser?.name || "Unknown";
 
+        console.log(`[Meeting Create] Emitting meet-started: host=${hostId}, invitee=${inviteeId}, meetingId=${meeting.meetingId}`);
+
         global.__emitToUser(inviteeId, "meet-started", {
           meetingId: meeting.meetingId,
           connectionId: String(hostId),
@@ -36,9 +38,13 @@ exports.createMeeting = async (req, res) => {
           title: meeting.title || "Meeting",
           createdAt: meeting.createdAt,
         });
+        
+        console.log(`[Meeting Create] Emit completed for meetingId=${meeting.meetingId}`);
       } catch (err) {
         console.error("Error emitting meet-started event:", err.message);
       }
+    } else {
+      console.warn(`[Meeting Create] Cannot emit: inviteeId=${inviteeId}, __emitToUser=${!!global.__emitToUser}`);
     }
 
     return res.status(201).json({

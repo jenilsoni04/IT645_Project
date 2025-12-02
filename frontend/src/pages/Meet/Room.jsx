@@ -241,7 +241,7 @@ export default function MeetingRoom() {
         socketRef.current?.off("rtc-answer");
         socketRef.current?.off("rtc-ice-candidate");
         socketRef.current?.off("rtc-user-left");
-      } catch {}
+      } catch(err) {console.log(err)}
       Object.values(peersRef.current).forEach((peerData) => {
         try { 
           if (peerData?.pc) {

@@ -66,7 +66,7 @@ exports.loginValidationRules = () => [
 ];
 
 exports.verificationValidationRules = () => [
-  body("code")
+  body("verificationCode")
     .trim()
     .notEmpty().withMessage("Verification code is required")
     .isLength({ min: 6, max: 6 }).withMessage("Verification code must be exactly 6 digits")

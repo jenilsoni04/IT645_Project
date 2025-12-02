@@ -85,9 +85,12 @@ const Connections = () => {
   };
 
   const getActiveMeetingForConnection = (connectionId) => {
-    return Object.values(meetingNotifications).find(
-      (notif) => notif.connectionId === connectionId
+    console.log(`[Connections] Checking for active meeting for connectionId=${connectionId}. Available notifications:`, Object.values(meetingNotifications).map(n => ({ connectionId: n.connectionId, meetingId: n.meetingId })));
+    const activeMeeting = Object.values(meetingNotifications).find(
+      (notif) => String(notif.connectionId) === String(connectionId)
     );
+    console.log(`[Connections] Found active meeting:`, activeMeeting);
+    return activeMeeting;
   };
 
   if (loading)
@@ -170,7 +173,7 @@ const Connections = () => {
                       </Typography>
 
                       <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
-                        <Button
+                        {/* <Button
                           variant="outlined"
                           size="small"
                           color="error"
@@ -182,7 +185,7 @@ const Connections = () => {
                           onClick={() => toast.info("Feature coming soon!")}
                         >
                           Remove
-                        </Button>
+                        </Button> */}
 
                         {getActiveMeetingForConnection(conn._id) ? (
                           <Button

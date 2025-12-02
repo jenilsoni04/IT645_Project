@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Project Introduction</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #e0f2fe, #ffffff, #dbeafe);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background: #ffffff;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: #1e293b;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: normal;
+      color: #475569;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 15px;
+      color: #334155;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .footer {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .highlight {
+      color: #2563eb;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1><%= projectName %></h1>
+    <h2>Project Introduction</h2>
+
+    <p>
+      This platform is designed to help users connect, communicate, and grow through
+      modern web technologies. It focuses on authentication, real-time interaction,
+      skill exchange, and user collaboration in a secure and scalable manner.
+    </p>
+
+    <p>
+      Built with passion using <span class="highlight">MERN Stack</span>,
+      <span class="highlight">Socket.IO</span>, and modern UI practices.
+    </p>
+
+    <div class="footer">
+      Created by <span class="highlight"><%= developerName %></span>
+    </div>
+  </div>
+
+</body>
+</html>

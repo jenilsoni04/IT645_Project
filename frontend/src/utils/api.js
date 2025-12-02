@@ -7,9 +7,11 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // send cookies (for cookie-based auth)
 })
 
 api.interceptors.request.use((config) => {
+  // Keep supporting Authorization header for backward compatibility (localStorage)
   const token = localStorage.getItem('token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`

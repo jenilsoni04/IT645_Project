@@ -1,17 +1,32 @@
 import { useEffect } from "react";
-import { getSocket } from "../services/socket";
+import { initSocket } from "../services/socket";
 import useNotifications from "../context/useNotifications";
 
 export const MeetNotificationListener = () => {
   const { addMeetingNotification, removeMeetingNotification } = useNotifications();
 
   useEffect(() => {
+    // Get token from localStorage to send in socket auth
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      console.warn("MeetNotificationListener: No token found in localStorage, socket may not authenticate");
+      return;
+    }
 
-    const socket = getSocket(token);
+    console.log("MeetNotificationListener: Initializing socket with token");
+    const socket = initSocket(token);
+
+    socket.on("connect", () => {
+      console.log("MeetNotificationListener: socket connected", socket.id);
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("MeetNotificationListener: socket connect_error", err && err.message ? err.message : err);
+    });
 
     socket.on("meet-started", (data) => {
+      console.log("MeetNotificationListener: received meet-started event", data);
+      console.log("Adding meeting notification with meetingId:", data.meetingId);
       addMeetingNotification(data);
     });
 
@@ -29,7 +44,7 @@ export const MeetNotificationListener = () => {
       socket.off("meet-started");
       socket.off("meet-ended");
     };
-  }, [addMeetingNotification]);
+  }, [addMeetingNotification, removeMeetingNotification]);
 
   return null;
 };

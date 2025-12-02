@@ -71,7 +71,7 @@ const Navbar = ({ onLogout }) => {
               ))}
             </nav>
 
-            <button
+            {/* <button
               type="button"
               className="rounded-full p-2 text-white transition hover:bg-white/10"
             >
@@ -85,7 +85,7 @@ const Navbar = ({ onLogout }) => {
               aria-label="Open profile"
             >
               <UserCircle className="h-6 w-6" />
-            </button>
+            </button> */}
 
             <div className="hidden md:block">
               <button

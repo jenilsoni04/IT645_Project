@@ -1,5 +1,7 @@
 const dotenv = require("dotenv");
 dotenv.config();
+const path = require("path");
+
 const { createServer } = require("http");
 const socketIo = require("socket.io");
 const connectDB = require("./config/db");
